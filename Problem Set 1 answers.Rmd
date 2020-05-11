@@ -1,0 +1,272 @@
+---
+title: "Problem Set 1 - Antworten"
+author: "Christoph Nguyen"
+date: "5/11/2020"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+# Setup 
+
+## Setup Packages
+
+Wir arbeiten in diesem Problem Set mit den Daten aus "Ehlert, Niek, Annika Hennl, and André Kaiser. 2007. “Föderalismus, Dezentralisierung Und Performanz. Eine Makroquantitative Analyse Der Leistungsfähigkeit Territorialer Politikorganisation in Entwickelten Demokratien.” Politische Vierteljahresschrift 48(2): 243–68."
+
+Bevor wir mit den inhaltlichen Fragen beginnen, müssen wir aber zuerst die notwendigen Packete installieren und aktivieren. 
+
+Falls ihr die Packete/libraries noch nicht installiert habt,  müssen dieser erst installiert werden. Das müsst ihr nur einmal machen. 
+
+```{r install packages}
+  install.packages("tidyverse", repos = "http://cran.us.r-project.org")
+```
+
+
+Wenn das Paket installiert ist, müsst ihr es auch noch aktivieren. Das müsst ihr jedesmal machen. 
+
+
+```{r load packages}
+  library(tidyverse)
+```
+
+
+
+## Daten Laden
+
+Nun müssen wir die Daten einladen. Wir beziehen die Daten hier direkt aus dem Internet. Allerdings könnt ihr auch die Daten von eurer Festplatte einlesen. 
+
+```{r read data}
+  data_fed<-read_csv("https://raw.githubusercontent.com/cgnguyen/parlament_in_r/master/fd-cross.csv")
+
+```
+
+# Frage 1
+
+Berechne für die Sozialausgaben (socexp10) und die Inflationsrate (infl10) die folgenden deskriptiven Werte.
+
+a.	Durschnitt 
+b.	Mittelwert 
+c.	Minimalwert
+d.	Maximalwert
+
+
+Mit base R
+```{r}
+summary(data_fed[,c("socexp10","infl10")])
+
+```
+
+Im Tidyverse 
+
+```{r}
+data_fed %>%
+  select(socexp10,infl10)%>%
+  summary(.)
+```
+
+Ihr könnt auch spezifische Werte ansteuern, in dem ihr die Befehle "mean", "median" etc. nutzt.
+
+
+
+# Frage 2 
+
+
+Berechne Mittelwert und Durchschnitt für föderale und zentralisierte Staaten (feddummy).
+
+Hier nutzen wir die *group_by* Funktion aus dem tidyverse. Wir solten hier auch feddummy in eine wirkliche Dummyvariable umwandeln. 
+
+
+```{r group by }
+ data_fed<-
+    data_fed %>% 
+    mutate(feddummy = factor(recode(feddummy,
+                                    `0`="Nein",
+                                    `1`="Ja")))
+
+  table_summary_2<-
+    data_fed %>%
+    group_by(feddummy)%>%
+    summarize(mean_socexp10= mean(socexp10,na.rm=T),
+              median_socexp10= median(socexp10,na.rm=T),
+              mean_infl10= mean(infl10,na.rm=T),
+              median_infl10= median(infl10,na.rm=T))
+  
+  table_summary_2
+```
+
+
+Das sieht aber ziemlich hässlich aus. Um die Darstellung von Ergebnissen in Rmarkdown etwas schöner zu gestalten, nutze ich hier Funktionen "kable" aus dem Packet *knitr::kable()* .Schaut mal in die orginalle Rmarkdown Datei, um zu sehen, wie das in der Praxis funktioniert. 
+
+```{r echo=FALSE} 
+  library(knitr)
+
+  kable(table_summary_2)
+
+```
+
+
+# Frage 3
+
+Berechne Mittelwert und Durchschnitt für Staaten mit und ohne englischer Rechtskultur
+
+Die Logik ist hier genau die gleich. Wir können in das Papier oder die Variablenliste schauen, um den Namen der Variable zu identifizieren. Der Name der Variable ist "legeng". 
+
+
+```{r}
+ data_fed<-
+    data_fed %>% 
+    mutate(legeng = factor(recode(legeng,
+                                    `0`="Nein",
+                                    `1`="Ja")))
+
+  table_summary_3<-
+    data_fed %>%
+    group_by(legeng)%>%
+    summarize(mean_socexp10= mean(socexp10,na.rm=T),
+              median_socexp10= median(socexp10,na.rm=T),
+              mean_infl10= mean(infl10,na.rm=T),
+              median_infl10= median(infl10,na.rm=T))
+  
+```
+
+```{r echo=FALSE}
+  kable(table_summary_3)
+```
+
+
+# Frage 4
+Berechne Mittelwert und Durchschnitt für föderale und zentralisierter Staaten mit und ohne englischer Rechtskultur 
+
+Der Befehl *dplyr::group_by*kann auch auf mehrere Variablen angewandt werden. 
+
+
+
+```{r}
+  table_summary_4<-
+    data_fed %>%
+    group_by(feddummy,legeng)%>%
+    summarize(mean_socexp10= mean(socexp10,na.rm=T),
+              median_socexp10= median(socexp10,na.rm=T),
+              mean_infl10= mean(infl10,na.rm=T),
+              median_infl10= median(infl10,na.rm=T))
+```
+
+```{r, echo=FALSE}
+  kable(table_summary_4)
+```
+
+# Frage 5
+Berechne diese Werte für dünn, mäßig und dicht-besiedeltet Staaten.
+popdens ist die Grundlage dieser Berechnung. Die Definition für dünn, mäßig, und dicht besiedelt solltet ihr selbst bestimmen.  
+
+Ein Möglicher Ansatz ist die Einteilung nach Eckwerten der Besiedlung. 
+
+```{r}
+quantile(data_fed$popdens)
+
+summary(data_fed$popdens)
+```
+Ich definiere hier dünn durch weniger als 25 % der Verteilung, und hoch als höher als 75% der Verteilung. Ich übernehme diese Werte direkt aus dem Befehl *quintile* .
+
+
+```{r}
+  data_fed<-
+    data_fed %>% 
+    mutate(popdens_factor = factor(case_when(
+      popdens < quantile(popdens,0.25) ~ "dünn",
+      popdens >= quantile(popdens,0.25) & popdens < quantile(popdens,0.75) ~"mäßig",
+      popdens >= quantile(popdens,0.75) ~"dicht")),
+      ordered=T)
+```
+
+
+Jetzt können wir wie gehabt fortfahren. 
+
+
+```{r}
+  table_summary_5<-
+    data_fed %>%
+    group_by(popdens_factor)%>%
+    summarize(mean_socexp10= mean(socexp10,na.rm=T),
+              median_socexp10= median(socexp10,na.rm=T),
+              mean_infl10= mean(infl10,na.rm=T),
+              median_infl10= median(infl10,na.rm=T))
+```
+
+
+```{r, echo=FALSE}
+kable(table_summary_5)
+```
+
+
+# Frage 6
+
+Jetzt können wir uns auch etwas inhaltlicher mit dem Papier auseinandersetzen. Die Frage, wie wir Performanz definieren sollte theoretisch geleitet sein. 
+
+Das ist nicht besonders einfach - denn sowohl Performanz als auch die Definitionen der unterschiedlichen Föderalismustypen sind nicht klar definiert. Hier müssen wir Theorie und Daten verbinden. 
+
+Eine Möglichkeit ist die Definition anhand der sub-nationalen fiskalischen Autonomie. Aber schon hier merken wir, auch das ist ein Messwert für Dezentralisierung. 
+
+```{r}
+  data_fed<-
+    data_fed %>% 
+    mutate(dezentralsierung = factor(case_when(dezrev1 < 0.06 ~ "Niedrig",
+                                               dezrev1 >= 0.06 & dezrev1 < 0.24 ~ "Mittel",
+                                               dezrev1 >= 0.24 ~"Hoch")))
+
+   table_6<-data_fed %>% 
+      group_by(feddummy,dezentralsierung) %>%
+      summarize(bip_kopf= mean(gdpppp94, na.rm=T),
+                bip_wachstum = mean(growth10, na.rm=T),
+                count= n(),
+                Länder= paste(country,collapse=",")) %>%
+     filter(!is.na(dezentralsierung))
+
+  table_6
+  
+```
+
+```{r}
+kable(table_6)
+```
+
+
+Grundsätzlicher ist es auch problematisch, dass hier die USA und Deutschland in der gleichen Kategorie sind, obwohl sie als Archetypen des Verbunds - und des Dualen Föderalismus angesehen werden können.  
+
+Die Antwort ist also, dass es hier keine richtig gute Antwort innerhalb des Datensatzes gibt. 
+
+
+# Andere Fragen aus dem Seminar
+
+## Faktoren neu Ordnen 
+
+Wir können R sagen, dass wir die Faktoren neu ordnen wollen. 
+
+```{r}
+    data_fed$popdens_factor <- factor(data_fed$popdens_factor, levels=c("dünn", "mäßig", "dicht"))
+```
+
+ 
+```{r}
+  summary(data_fed$popdens_factor)
+```
+## Faktoren aus zwei Variablen kombinieren 
+
+Wenn wir eine kategorische Variable kombinieren wollen, können wir weiterhin den Befehl *dplyr::case_when* nutzen, und die notwendigen Konditionen mit einem "&" verbinden.  Wenn wir z.B. unitär und föderal , sowie ein englisches Rechtsssytem abbilden wollen. 
+
+```{r}
+    data_fed<-
+      data_fed %>% 
+      mutate(fed_leg = factor(case_when(
+        feddummy == "Ja" & legeng == "Ja" ~ "Föderalstaat mit englischem Rechtssystem" ,
+        feddummy == "Ja" & legeng == "Nein" ~ "Föderalstaat ohne englisches Rechtssystem" ,
+        feddummy == "Nein" & legeng == "Ja" ~ "Unitärer Staat mit englischem Rechtssystem" ,
+        feddummy == "Nein" & legeng =="Nein" ~ "Unitärer Staat ohne englisches Rechtssystem")))
+                  
+```                          
+
+
+
+
+
