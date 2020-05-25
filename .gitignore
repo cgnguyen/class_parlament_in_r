@@ -3,3 +3,9 @@
 .RData
 .Ruserdata
 extract_christoph.Rda
+mp_characteristics.dta
+vote_characteristics.dta
+voting_behavior.dta
+bip_kopf.csv
+bip_kopf_de.csv
+parlament_in_r.Rproj
