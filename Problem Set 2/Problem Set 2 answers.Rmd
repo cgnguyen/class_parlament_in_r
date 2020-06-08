@@ -1,0 +1,128 @@
+---
+title: "Problem Set 2 - Antworten"
+author: "Christoph Nguyen"
+date: "6/8/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+# Setup und Daten reinigen 
+Wir nutzen die Daten des Bundestag Roll call vote data (BTVote) von https://dataverse.harvard.edu/dataverse/btvote. Wir wandeln einige Daten in Faktorvariablen um. 
+
+```{r}
+  #Load Packages
+  library(tidyverse)
+  library(ggthemes)
+  library(haven)
+
+  #Read in Data###
+  DATA_vote<-read_dta("./../vote_characteristics.dta")
+  
+  ####Data Cleaning####
+  DATA_vote$feld<-as_factor(DATA_vote$policy1)
+  DATA_vote$fraktion<-as_factor(DATA_vote$sponsor1)
+  DATA_vote$art<-as_factor(DATA_vote$vote_type)
+```
+#Frage 1: Zuordnung des Bereichs 
+
+Vergleiche die Anzahl der Gesetzesvorschläge in den primären Politikfeldern (policy1) in einem Balkendiagram. 
+```{r}
+  DATA_vote%>%
+    group_by(feld)%>%
+    summarize(n=n())%>%
+    arrange(-n)%>%
+    ggplot(aes(x=reorder(feld,-n),y=n))+
+      geom_col()+
+      theme_bw()+
+      theme(axis.text.x = element_text(size=8, angle=90, vjust=0.5))+
+  labs(x="Politikfeld", y="Anzahl")
+```
+  
+#Frage 2 relative Häufigkeit der Politikfelder
+
+Vergleiche die relative Verteilung der primären Politikfelder (policy1) in einem Balkendiagram. 
+
+```{r}
+  DATA_vote%>%
+    group_by(feld)%>%
+    summarize(n=n())%>%
+    mutate(freq = n / sum(n))%>%
+    arrange(-n)%>%
+    ggplot(aes(x=reorder(feld,-freq), y=freq))+
+    geom_col()+ 
+    theme_bw()+
+    theme(axis.text.x = element_text(size=8, angle=90, vjust=0.5)) 
+```
+
+#Frage 3 relative Häufigkeit nach Partei
+
+## Facet_grid Version 
+```{r, fig.fullwidth=TRUE, fig.align='center'} 
+  DATA_vote%>%
+    group_by(fraktion,feld)%>%
+    summarize(n=n())%>%
+    group_by(fraktion)%>%
+    mutate(freq = n / sum(n))%>%
+    filter(fraktion %in% c("CDU/CSU","SPD","Greens","FDP","Left/PDS"))%>%
+    ggplot(aes(x=reorder(feld,-freq), y=freq))+
+      geom_col()+
+      facet_grid(.~fraktion)+
+      theme_bw()+
+      theme(axis.text.x = element_text(size=8, angle=90, vjust=0.5)) 
+```
+
+## Stacked Bar Chart Version 
+
+```{r}
+  DATA_vote%>%
+    group_by(feld,fraktion)%>%
+    summarise(n = n())%>%
+    filter(fraktion %in% c("CDU/CSU","SPD","Greens","FDP","Left/PDS"))%>%
+    group_by(feld)%>%
+    mutate(freq = n / sum(n))%>%
+    mutate(fraktion=fct_reorder(fraktion,n))%>%
+    ggplot(aes(x=reorder(feld,n), y=freq, fill=fraktion))+
+      geom_bar(position="fill",stat="identity", color="black")+ 
+      theme_bw()+
+      theme(axis.text.x = element_text(size=8, angle=90, vjust=0.5))+
+      coord_flip()+
+      scale_fill_manual(values = c("Yellow","Purple","Dark Green","Black","Red"))+
+  labs(x="Politikfeld",y="Verteilung nach Fraktion",
+       caption="Politikfelder nach Häufigkeit sortiert")
+```
+
+
+# Frage 4: Sponsor behavior####
+
+Welche (Haupt)-Fraktion (sponsor1) sponsort Abstimmungen im Bundestag? Wie entwickelt sich dieses Verhalten über die Legislaturperioden? Beschränkt diese Analyse auf die Fraktionen der CDU/CSU, SPD, FDP, Grünen und der PDS/Linken.  Stelle dies in einem Liniendiagram dar.   
+
+
+```{r}
+  DATA_vote%>%
+    group_by(elecper,fraktion)%>%
+    summarize(n=n()) %>% 
+    filter(fraktion %in% c("CDU/CSU","SPD","Greens","FDP","Left/PDS"))%>%
+    ggplot(aes(x=elecper,y=n, group=fraktion, color=fraktion))+
+      geom_line()+
+      theme_bw()+
+      labs(x="Legislaturperiode", y="Anzahl", 
+           title = "(Haupt)Sponsoren nach Partei")+
+      scale_color_manual(
+        values = c(
+                "CDU/CSU"="black",
+                "SPD"="red",
+                "FDP"="yellow",
+                "Greens"="dark green",
+                "Left/PDS"="purple"))+
+      scale_x_continuous(breaks = seq(1,max(DATA_vote$elecper)))
+                
+   
+```
+  
+  
+
+
+
+
