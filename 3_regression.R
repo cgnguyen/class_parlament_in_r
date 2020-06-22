@@ -1,27 +1,7 @@
-####Setup####
-  ####*Packages
-  #Activate Library 
-    library(tidyverse)
-    library(haven)
-    library(stargazer)
-    library(texreg)
-    library(sjPlot)
-    library(ggrepel)
-
-  ####*Daten Einlesen und anschauen####
-  data_fed<-read_csv("fd-cross.csv")
-
-  ####*Daten Säubern 1 - Numerisch zu Faktor ####
-  
-  summary(data_fed$feddummy)
-  
-  data_fed<-
-    data_fed %>% 
-    mutate(feddummy = factor(dplyr::recode(feddummy,
-                                    `0`="Nein",
-                                    `1`="Ja")))
-
 ####Was ist eine Regression?####
+  #Activate Library 
+  library(tidyverse)
+  
   ####*BeispielDaten####
   #x =1000 random numbers between -10 and plus 10
   x<-runif(1000, min=-10, max=10)
@@ -31,7 +11,7 @@
   #Intercept
   intercept<-3
   
-  #Some randomly distributed measurement error with mean 0
+  #Messfehler mit Mittelwert 0 
   error<- rnorm(n=1000,mean=0, sd=10)
   
   #Generate observed variables
@@ -54,7 +34,42 @@
   ####*Regression Model####
   summary(lm(y~x))
   
+  ###Bias und fehlende Variablen#
   
+  #Missing variable 
+  z<-runif(1000, min=-10, max=10)
+  
+   
+  #New "real y# 
+  y_real<-(2*x)+(40*z)
+  
+  #Generate observed variables
+  y<-y_real+error+intercept
+  
+  summary(lm(y~x+z))
+
+  
+  
+####Setup####
+  ####*Packages
+    library(haven)
+    library(stargazer)
+    library(texreg)
+    library(sjPlot)
+    library(ggrepel)
+
+  ####*Daten Einlesen und anschauen####
+  data_fed<-read_csv("fd-cross.csv")
+
+  ####*Daten Saeubern  - Numerisch zu Faktor ####
+  
+  summary(data_fed$feddummy)
+  
+  data_fed<-
+    data_fed %>% 
+    mutate(feddummy = factor(dplyr::recode(feddummy,
+                                    `0`="Nein",
+                                    `1`="Ja")))
   
   
 ####Regression 1: Bivariate Regression####
@@ -79,7 +94,7 @@
     geom_smooth(method = "lm")
   
   
-  #GDP und Grösse
+  #GDP und Groesse
   fig_2<-
       data_fed%>%
       select(gdpppp94,area,country)%>%
@@ -89,7 +104,7 @@
         geom_point()+
         geom_text_repel()+
         theme_bw()+
-        labs(x="Fläche in km2", y="BIP zu Marktpreisen pro Kopf")
+        labs(x="Fl?che in km2", y="BIP zu Marktpreisen pro Kopf")
     fig_2
   
   mod_2<-lm(gdpppp94~area, data=data_fed)
@@ -108,7 +123,7 @@
           aes(x=democ,y=gdpppp94, color=feddummy)+
           geom_point()+
           theme_bw()+
-          labs(x="Anzahl der demokratischen Jahre 1900-2003", y="BIP zu Marktpreisen pro Kopf", color="Föderal")
+          labs(x="Anzahl der demokratischen Jahre 1900-2003", y="BIP zu Marktpreisen pro Kopf", color="Foederal")
         fig_3
       
   
@@ -129,7 +144,7 @@
 
     
 ####Regression 3: Multivariate full####
-    mod_4<-lm(gdpppp94~democ+feddummy+dezrev2+popdens+area+incineq1+ethnic+religion , data= data_fed)
+    mod_4<-lm(gdpppp94~democ+feddummy+dezrev2+popdens+area+incineq1+ethnic+religion, data= data_fed)
     
     summary(mod_4)
     
@@ -143,13 +158,13 @@
   screenreg(list(mod_1,mod_3,mod_4),
             custom.coef.names = 
               c("Intercept",
-                "Demokratische Jahre","Unitärer Staat","Dezentralisierung","Bevölkerungsdichte",
-                "Fläche","Ungleichheit-GINI", "Ethnische Fragmentierung","Religiöse Fragmentierung"))
+                "Demokratische Jahre","Unitaerer Staat","Dezentralisierung","Bevoelkerungsdichte",
+                "Flaeche","Ungleichheit-GINI", "Ethnische Fragmentierung","Religioese Fragmentierung"))
   
   
    name_vec<-c("Intercept",
-                "Demokratische Jahre","Unitärer Staat","Dezentralisierung","Bevölkerungsdichte",
-                "Fläche","Ungleichheit-GINI", "Ethnische Fragmentierung","Religiöse Fragmentierung")
+                "Demokratische Jahre","Unitaerer Staat","Dezentralisierung","Bevoelkerungsdichte",
+                "Flaeche","Ungleichheit-GINI", "Ethnische Fragmentierung","Religioese Fragmentierung")
   
   #Export to html 
   htmlreg(list(mod_1,mod_3,mod_4),
@@ -171,7 +186,7 @@
               axis.labels = rev(name_vec[-1]))+
     theme_bw()+
     geom_hline(mapping=aes(yintercept=0), color="black", linetype="dashed")+
-    labs(x="Variables", title="BIP pro Kopf")+
+    labs(x="Variablen", title="BIP pro Kopf")+
     theme(legend.position = "none")
                  
 

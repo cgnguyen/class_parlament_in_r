@@ -18,7 +18,7 @@ DATA$year<-lubridate::year(DATA$verk_date)
 
 ####Abbildung herstellen####
 
-DATA%>%
+temp<-DATA%>%
   group_by(year,bill_type) %>%
   summarize(n=n())%>%
   filter(!is.na(bill_type))%>%
@@ -36,7 +36,9 @@ DATA%>%
   geom_vline(xintercept=2006, color="grey")+
   geom_label(aes(x=2006,y=0.7, label= "Reform"))
 
+temp
 
+ggsave(plot=temp, file="temp.png" , width = 20 , height =10 , unit= "cm")
 
 
   
