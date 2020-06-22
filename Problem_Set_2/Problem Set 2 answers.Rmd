@@ -12,6 +12,7 @@ knitr::opts_chunk$set(echo = TRUE)
 Wir nutzen die Daten des Bundestag Roll call vote data (BTVote) von https://dataverse.harvard.edu/dataverse/btvote. Wir wandeln einige Daten in Faktorvariablen um. 
 
 ```{r}
+  
   #Load Packages
   library(tidyverse)
   library(ggthemes)
@@ -100,7 +101,7 @@ Welche (Haupt)-Fraktion (sponsor1) sponsort Abstimmungen im Bundestag? Wie entwi
 
 
 ```{r}
-  DATA_vote%>%
+  temp<-DATA_vote%>%
     group_by(elecper,fraktion)%>%
     summarize(n=n()) %>% 
     filter(fraktion %in% c("CDU/CSU","SPD","Greens","FDP","Left/PDS"))%>%
@@ -110,14 +111,17 @@ Welche (Haupt)-Fraktion (sponsor1) sponsort Abstimmungen im Bundestag? Wie entwi
       labs(x="Legislaturperiode", y="Anzahl", 
            title = "(Haupt)Sponsoren nach Partei")+
       scale_color_manual(
-        values = c(
-                "CDU/CSU"="black",
+        values = c("CDU/CSU"="black",
                 "SPD"="red",
                 "FDP"="yellow",
                 "Greens"="dark green",
                 "Left/PDS"="purple"))+
       scale_x_continuous(breaks = seq(1,max(DATA_vote$elecper)))
                 
+   temp
+   
+   
+   
    
 ```
   
