@@ -1,15 +1,13 @@
 ####Setup####
-  #Activate Library 
+  #####*Activate Library#### 
     library(tidyverse)
     library(haven)
 
-####Get cleaned data####
-
-
+  ####*Get data####
+  DATA<-read_dta("https://github.com/cgnguyen/parlament_in_r/blob/master/Problem_Set_3/problem_set_3.dta?raw=true")
       
-      
-####Data cleaning####
-      DATA$mandate<-as_factor(DATA$mandate)
+  ####*Data cleaning####
+  DATA$mandate<-as_factor(DATA$mandate)
       
 
 ####Exercise 1: Deviation and electoral safety####
@@ -24,11 +22,17 @@
       
       #Model
         mod_1 <- lm (deviation ~ elecsafe_overall, data=DATA)
+        summary(mod_1)
         
       
- 
-    
-    
+ ####*Exercise 2: Deviation+ electoral safety+ fraktion####
+        mod_2 <- lm (deviation ~ elecsafe_overall+party_elec, data=DATA)
+        summary(mod_2)    
+
+ ####*Exercise 3: Deviation+ electoral safety+ mandate####
+        mod_3 <- lm (deviation ~ elecsafe_overall+mandate, data=DATA)  
+        
+        summary(mod_3)    
     
     
     
