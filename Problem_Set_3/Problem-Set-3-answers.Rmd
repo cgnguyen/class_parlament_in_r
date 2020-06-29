@@ -1,0 +1,130 @@
+---
+title: "Problem Set 3 - Antworten"
+author: "Christoph Nguyen"
+date: "6/29/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+# Setup und Daten reinigen 
+Wir nutzen die Daten des Bundestag Roll call vote data (BTVote) von https://dataverse.harvard.edu/dataverse/btvote. Die wirkliche Aufbereitung der Daten besprechen war optional und wird in einem gesonderten Dokument erklärt.
+
+```{r}
+  
+  #Load Packages
+  library(tidyverse)
+  library(ggthemes)
+  library(haven)
+  library(knitr)
+  library(sjPlot) #for nice rmarkdown tables
+
+  #Read in Data###
+  DATA<-read_dta("https://github.com/cgnguyen/parlament_in_r/blob/master/Problem_Set_3/problem_set_3.dta?raw=true")
+
+  ####*Data cleaning####
+  DATA$mandate<-as_factor(DATA$mandate)
+  
+  DATA$party_elec<-as_factor(DATA$party_elec)
+```
+#Frage 1: Wahlverhalten und der Sicherheit des Wahlkreises
+
+Gibt es ein Verhältnis zwischen abweichendem Wahlverhalten und der Sicherheit des Wahlkreises (elecsafe_overall)? 
+
+### Graphische Darstellung
+
+
+```{r}
+ DATA %>%
+        ggplot()+
+        aes(x=elecsafe_overall, y=deviation)+
+        geom_point()+
+        theme_bw()+
+        geom_smooth(method="lm")
+```
+  
+  
+### Einfache Regression 
+  
+```{r}
+  mod_1 <- lm (deviation ~ elecsafe_overall, data=DATA)
+  
+  summary(mod_1)
+
+```
+  
+  
+  Tab_model um die Tabellen etwas "schöner" zu machen. 
+  
+```{r }
+  tab_model(mod_1,p.style="stars")
+```
+
+
+Was bedeutet elecsafe_overall? Codebook Referenz ist [Stoffel & Sieberer 2017]( https://www.tandfonline.com/doi/full/10.1080/01402382.2017.1400273). Herleitung etwas kompliziert, aber Bedeutung ist klar. Chance der Wiederwahl auf einer Skala von 0 bis 1. 
+
+Abhängige Variable ist Prozentzahl der abweichenden Wahl. 
+
+Interpretation: Wenn die Sicherheit des Wahlkreis um eine Einheit (also von 0 % zu 100%) steigt, sinkt das abweichende Wahlverhalten um ca. 1.1 % (-0.0118). Der Effekt ist statistische signifikant. Das heißt, wenn es kein  Verhältnis zwischen Sicherheit und  geben würde (Koeffizient ist 0) würden wir diesen Koeffizienten in weniger als 1% der Fälle beobachten (- wenn OLS Annahmen erfüllt sind)
+
+
+
+# Frage 2: Verhältnis für Wahlkreissicherheit und Fraktionszugehörigkeit.
+
+
+### Modell 
+
+```
+    mod_2 <- lm (deviation ~ elecsafe_overall+party_elec, data=DATA)
+    tab_model(mod_2,p.style="stars")
+
+```
+
+Für jeden Punkt "Sicherheit" sinkt das abweichende Wahlverhalten um ca 1%. Es gibt auch Unterschiede zwischen den Fraktionen. Im Vergleich zur SPD, gibt es bei der CDU, CSU und der LInken ca. 1% weniger Abweichungen. Bei der FDP sind es sogar 2% weniger. Bei den Grünen sind es ca 1% mehr. 
+
+### Visualsierung 1:  Basiert auf dem Model 
+
+```
+ DATA%>%
+        select(deviation,elecsafe_overall,party_elec)%>%
+        drop_na()%>%
+        cbind(., pred=predict(mod_2))%>%
+        ggplot()+
+          aes(x=elecsafe_overall, y=deviation, color=party_elec)+
+          geom_point(alpha=1, size=1)+
+          geom_line(mapping = aes(y=pred), size=1)+
+          scale_color_manual(values=c("red","black","blue","yellow","dark green", "                               purple"))+
+          theme_bw()
+
+``` 
+
+### Visualsierung 2: Für jede Partei 
+
+```{r }
+ DATA%>%
+        select(deviation,elecsafe_overall,party_elec)%>%
+        drop_na()%>%
+        ggplot()+
+          aes(x=elecsafe_overall, y=deviation, group=party_elec, color=party_elec)+
+          geom_point(alpha=1, size=1)+
+          geom_smooth(method="lm", se=F)+
+          scale_color_manual(values=c("red","black","blue","yellow","dark green", "                               purple"))+
+          theme_bw()
+``` 
+
+
+# Frage 3: Mandatstyp und Sicherheit 
+
+
+
+```{r}
+  mod_3 <- lm (deviation ~ elecsafe_overall+mandate, data=DATA)  
+  tab_model(mod_3,p.style="stars")
+
+```
+
+Distriktmandate (im Vergleich zu einem Listenmandat) haben statistisch signifikant weniger Abweichungen. Allerdings ist nun die Sicherheit des Wahlkreises nicht mehr statistisch relevant. 
+
+
+
