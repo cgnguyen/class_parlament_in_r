@@ -39,6 +39,8 @@ Nun müssen wir die Daten einladen. Wir beziehen die Daten hier direkt aus dem I
 ```{r read data}
   data_fed<-read_csv("https://raw.githubusercontent.com/cgnguyen/parlament_in_r/master/fd-cross.csv")
 
+data_fed <- read_csv("fd-cross.csv")
+
 ```
 
 # Frage 1
@@ -54,6 +56,10 @@ d.	Maximalwert
 Mit base R
 ```{r}
 summary(data_fed[,c("socexp10","infl10")])
+
+summary(data_fed$socexp10,data_fed$infl10)
+
+with(data_fed, summary(socexp10,infl10))
 
 ```
 
@@ -81,8 +87,8 @@ Hier nutzen wir die *group_by* Funktion aus dem tidyverse. Wir solten hier auch 
  data_fed<-
     data_fed %>% 
     mutate(feddummy = factor(recode(feddummy,
-                                    `0`="Nein",
-                                    `1`="Ja")))
+                                    `0`="Unitär",
+                                    `1`="Föderal")))
 
   table_summary_2<-
     data_fed %>%
@@ -224,6 +230,15 @@ Eine Möglichkeit ist die Definition anhand der sub-nationalen fiskalischen Auto
      filter(!is.na(dezentralsierung))
 
   table_6
+  
+  
+  data_fed %>% 
+      group_by(fedmadx,dezentralsierung) %>%
+      summarize(bip_kopf= mean(gdpppp94, na.rm=T),
+                bip_wachstum = mean(growth10, na.rm=T),
+                count= n(),
+                Länder= paste(country,collapse=",")) 
+  
   
 ```
 
