@@ -43,9 +43,9 @@
     group_by(fraktion)%>%
     mutate(freq = n / sum(n))%>%
     filter(fraktion %in% c("CDU/CSU","SPD","Greens","FDP","Left/PDS"))%>%
-    ggplot(aes(x=reorder(feld,-freq), y=freq))+
+    ggplot(aes(x=reorder(fraktion,-freq), y=freq, fill=feld, color=feld))+
       geom_col()+
-      facet_grid(.~fraktion)+
+      # facet_grid(.~fraktion)+
       theme_bw()+
       theme(axis.text.x = element_text(size=8, angle=90, vjust=0.5)) 
   
@@ -76,13 +76,14 @@
     group_by(elecper,fraktion)%>%
     summarize(n=n()) %>% 
     filter(fraktion %in% c("CDU/CSU","SPD","Greens","FDP","Left/PDS"))%>%
-    mutate(farbe= case_when(fraktion == "CDU/CSU" ~ 'blue', 
+    mutate(farbe= case_when(fraktion == "CDU/CSU" ~ 'black', 
                             fraktion == "SPD" ~ 'red', 
                             fraktion == "FDP" ~ 'yellow', 
                             fraktion == "Greens" ~ 'dark green',
                             fraktion == "Left/PDS" ~ 'purple'))%>%
-    ggplot(aes(x=elecper,y=n, group=fraktion, color=farbe))+
+    ggplot(aes(x=elecper,y=n, group=fraktion, color=fraktion))+
       geom_line()+
       theme_bw()
+      # scale_color_manual(values=farbe)
   
   

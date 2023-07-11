@@ -8,7 +8,8 @@
       
   ####*Data cleaning####
   DATA$mandate<-as_factor(DATA$mandate)
-      
+    DATA$party_elec<-as_factor(DATA$party_elec)
+
 
 ####Exercise 1: Deviation and electoral safety####
           
@@ -30,10 +31,10 @@
         summary(mod_2)    
 
  ####*Exercise 3: Deviation+ electoral safety+ mandate####
-        mod_3 <- lm (deviation ~ elecsafe_overall+mandate, data=DATA)  
+        mod_3 <- lm (deviation ~ elecsafe_district+mandate+listpos, data=DATA)  
         
         summary(mod_3)    
-    
+      
     
     
 
